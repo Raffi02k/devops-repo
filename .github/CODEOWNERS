@@ -1,0 +1,11 @@
+# Det här är globala ägare för alla filer i repot
+* @Raffi02k
+
+# Dokumentation tas om hand av 
+/docs/ @Raffi02k
+
+# Skript och automation tas om hand av
+/scripts/ @Raffi02k
+
+# GitHub-konfigurationer (som workflows eller workflows-filer)
+/.github/ @Raffi02k
