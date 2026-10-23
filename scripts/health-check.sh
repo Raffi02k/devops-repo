@@ -2,7 +2,6 @@
 set -euo pipefail
 
 url="${1:?Give the address to check, for example http://localhost:3000/health}"
-expected_commit="${2:-}"
 ATTEMPTS="${ATTEMPTS:-10}"
 DELAY="${DELAY:-3}"
 
