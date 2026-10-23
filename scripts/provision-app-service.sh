@@ -79,3 +79,33 @@ az identity federated-credential create \
   --audiences api://AzureADTokenExchange \
   --query subject \
   --output tsv
+
+echo "==> 5. Role assignment"
+SCOPE=$(az group show \
+  --name "$RESOURCE_GROUP" \
+  --query id \
+  --output tsv)
+
+# Ask first: Azure refuses to make the same role assignment twice. Look for the role first.
+# roles: a brand-new identity may not be found by name yet ("Cannot find user or service principal in...")
+if [ -z "$(az role assignment list --scope "$SCOPE" --role Contributor --query "[?principalId=='$PRINCIPAL_ID'].id" --output tsv)" ]; then
+  az role assignment create \
+    --assignee-object-id "$PRINCIPAL_ID" \
+    --assignee-principal-type ServicePrincipal \
+    --role Contributor \
+    --scope "$SCOPE" \
+    --output none
+fi
+
+echo "==> 6. What the pipeline needs to know, in the GitHub repo"
+gh secret set AZURE_CLIENT_ID --body "$CLIENT_ID"
+gh secret set AZURE_TENANT_ID --body "$(az account show --query tenantId --output tsv)"
+gh secret set AZURE_SUBSCRIPTION_ID --body "$(az account show --query id --output tsv)"
+
+gh variable set AZURE_APP_NAME --body "$APP_NAME"
+gh variable set AZURE_APP_URL --body "$APP_URL"
+gh variable set AZURE_RESOURCE_GROUP --body "$RESOURCE_GROUP"
+
+echo "Ready: $APP_URL"
+echo "Wait a minute or two for the role, then push a change to main."
+
