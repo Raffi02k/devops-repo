@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
+# Usage: ./scripts/health-check.sh https://my-app.azurewebsites.net/health
 set -euo pipefail
 
-url="${1:?Give the address to check, for example http://localhost:3000/health}"
+url="${1:?Give the address as the first argument}"
 ATTEMPTS="${ATTEMPTS:-10}"
-DELAY="${DELAY:-3}"
+DELAY="${DELAY:-5}"
 
-echo "==> Checking health at $url"
+echo "Checking $url"
+echo "At most $ATTEMPTS attempts, $DELAY seconds apart"
+
 for attempt in $(seq 1 "$ATTEMPTS"); do
-  status=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 10 "$url" || true)
+  status=$(curl --silent --output /dev/null --write-out "%{http_code}" \
+    --max-time 10 "$url" || true)
+
   if [ "$status" = "200" ]; then
-    echo "  ok    $url responded with 200 (attempt $attempt/$ATTEMPTS)"
+    echo "OK: the app answered 200 on attempt $attempt."
     exit 0
   fi
-  echo "  wait  attempt $attempt/$ATTEMPTS: got status '$status', retrying in ${DELAY}s..."
-  sleep "$DELAY"
+
+  # No point waiting after the last attempt: there is nothing left to wait for.
+  if [ "$attempt" -lt "$ATTEMPTS" ]; then
+    echo "Attempt $attempt of $ATTEMPTS: status $status. Waiting $DELAY s..."
+    sleep "$DELAY"
+  else
+    echo "Attempt $attempt of $ATTEMPTS: status $status. Giving up."
+  fi
 done
 
-echo "  FAIL  $url did not respond with 200 after $ATTEMPTS attempts"
 exit 1
