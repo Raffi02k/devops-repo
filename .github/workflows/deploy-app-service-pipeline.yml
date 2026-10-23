@@ -40,3 +40,4 @@ jobs:
 
       - name: Run Health Check (Smoke Test)
         run: ./scripts/health-check.sh "https://azurewebsites.net"
+
