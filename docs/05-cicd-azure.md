@@ -50,6 +50,45 @@ Med **OIDC (OpenID Connect)** används istället en kortlivad, kryptografiskt si
 
 ---
 
+## 💡 Felsökning & Lösning: Federerad koppling via Azure CLI (`cat <<EOF`)
+
+När man konfigurerar den federerade kopplingen (Federated Credential) i Azure Portal kan webbgränssnittet ibland låsa sig eller vägra acceptera den exakta `subject`-identifieraren som GitHub Actions faktiskt skickar med i sitt OIDC-token.
+
+När vi stötte på patrull i webbportalen löste vi det genom att gå runt portalen och skapa konfigurationsfilen ("passbrickan") direkt i terminalen med kommandot `cat <<EOF`:
+
+```bash
+cat <<EOF > credential-config.json
+{
+  "name": "github-main-branch",
+  "issuer": "https://token.actions.githubusercontent.com",
+  "subject": "repo:Raffi02k@179481044/devops-repo@1387627200:ref:refs/heads/main",
+  "description": "Federated credential for GitHub Actions",
+  "audiences": [
+    "api://AzureADTokenExchange"
+  ]
+}
+EOF
+```
+
+### Vad gör den här konfigurationen?
+1. **`cat <<EOF > credential-config.json`**: Skapar och fyller en ny fil på maskinen direkt från terminalen utan att behöva öppna en extern textredigerare.
+2. **`"name"`**: Ett beskrivande namn på den federerade kopplingen inuti Microsoft Entra ID.
+3. **`"issuer"`**: Talar om för Azure att det är GitHub (`https://token.actions.githubusercontent.com`) som intygar vem som vill logga in.
+4. **`"subject"`**: **Den magiska raden!** Här stoppade vi in det dolda, exakta ID-numret (`repo:Raffi02k@179481044/devops-repo@1387627200:ref:refs/heads/main`) som vi identifierade direkt i GitHub Actions felmeddelandelogg.
+5. **`"audiences"`**: Anger målet (`api://AzureADTokenExchange`), vilket talar om att tokenet är avsett för Azure.
+
+### Skicka in konfigurationen till Azure:
+Direkt efter att filen genererats skickade vi in den till Azure via Azure CLI:
+
+```bash
+az ad app federated-credential create --id "$AZURE_CLIENT_ID" --parameters credential-config.json
+```
+
+> [!TIP]
+> **DevOps-lärdom:** Genom att använda Azure CLI och JSON-konfiguration slapp vi klicka i ett låst webbgränssnitt, fick full kontroll över parametrar som portalen försökte validera bort, och skapade en repeterbar lösning som kan köras i skript.
+
+---
+
 ## 🛠 Driftsättningsskript (`scripts/deploy-app-service.sh`)
 
 För att följa DevOps-principen att automatisering ska kunna testas både lokalt och i CI/CD skapades ett modulärt driftsättningsskript:
