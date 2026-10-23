@@ -1,32 +1,36 @@
-name: Build, Deploy and Health Check
+name: Deploy App Service Pipeline
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
   workflow_dispatch:
 
-permissions:
-  id-token: write
-  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build-and-test:
+    name: Build and Test
+    uses: ./.github/workflows/build-test-pipeline.yml
+
+  deploy:
+    name: Deploy
+    needs: build-and-test
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      AZURE_APP_NAME: ${{ vars.AZURE_APP_NAME }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies and build
-        run: |
-          npm ci
-          npm run build --if-present
 
       - name: Log in to Azure using OIDC
         uses: azure/login@v2
@@ -36,11 +40,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'app-waypoint-raffi'
-          package: '.'
+        run: ./scripts/deploy-app-service.sh "$AZURE_APP_NAME" "$AZURE_RESOURCE_GROUP"
 
       - name: Run Health Check (Smoke Test)
-        run: ./scripts/health-check.sh "https://app-waypoint-raffi.azurewebsites.net/health"
-        
+        run: ./scripts/health-check.sh "${{ vars.AZURE_APP_URL }}/health"
