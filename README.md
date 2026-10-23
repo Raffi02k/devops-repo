@@ -42,6 +42,7 @@ devops-repo/
 │   ├── deploy-app-service.sh               # Paketerar och driftsätter via Azure CLI
 │   ├── health-check.sh                     # Hälskontroll av rullad applikation (pollning)
 │   ├── provision-app-service.sh            # Etablerar plan, webbapp och identitet i Azure
+│   ├── teardown-app-service.sh             # Raderar webbapp och plan i Azure samt listar kvarvarande resurser
 │   └── test.sh                             # Funktionella och strukturella tester
 ├── src/                                    # Waypoint webbapplikation (Node.js 24)
 └── README.md
