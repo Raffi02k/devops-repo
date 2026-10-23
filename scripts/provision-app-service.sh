@@ -30,9 +30,33 @@ az webapp create \
   --query defaultHostName \
   --output tsv
 
-echo "==> 2. The user-assigned managed identity"
+az webapp config appsettings set \
+  --name "$APP_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+  --query "[].name" \
+  --output tsv
+
+echo "==> 2. The first deploy, and is it up?"
+./scripts/deploy-app-service.sh "$APP_NAME" "$RESOURCE_GROUP"
+
+APP_URL="https://$(az webapp show \
+  --name "$APP_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query defaultHostName \
+  --output tsv)"
+
+ATTEMPTS=30 ./scripts/health-check.sh "$APP_URL/health" "$(git rev-parse HEAD)"
+
+echo "==> 3. The pipeline's identity: a managed identity in the same group"
 az identity create \
   --name "$IDENTITY_NAME" \
   --resource-group "$RESOURCE_GROUP" \
-  --query id \
+  --query name \
   --output tsv
+
+CLIENT_ID=$(az identity show \
+  --name "$IDENTITY_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query clientId \
+  --output tsv)
