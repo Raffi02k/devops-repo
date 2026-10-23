@@ -13,7 +13,7 @@ Projektet byggs upp steg för steg vecka för vecka genom praktiska moduler – 
 | **01** | **DevOps som arbetssätt** | Klar – Värdeflödeskarta (VSM), flaskhalsanalys och DORA-mått ([docs/01-delivery-analysis.md](file:///Users/raffimedz/Desktop/devops/devops-repo/docs/01-delivery-analysis.md)) |
 | **02** | **Versionshantering** | Klar – Trunk-based development, PR-mall, CODEOWNERS, SemVer och releasetagg `v0.1.0` ([docs/02-branching-strategy.md](file:///Users/raffimedz/Desktop/devops/devops-repo/docs/02-branching-strategy.md)) |
 | **03** | **Kontinuerlig integration (CI)** | Klar – GitHub Actions pipeline, lokala bygg-/testskript, commit-validering och kvalitetsgrindar ([docs/03-ci-pipeline.md](file:///Users/raffimedz/Desktop/devops/devops-repo/docs/03-ci-pipeline.md)) |
-| **04** | **Azure App Service** | Kommande |
+| **04** | **Azure App Service** | Klar – Driftsättning via Azure CLI, resursgrupper, App Service Plan, hälskontroll och kostnadskontroll ([docs/04-Azure.md](file:///Users/raffimedz/Desktop/devops/devops-repo/docs/04-Azure.md)) |
 | **05** | **CI/CD till Azure** | Kommande |
 | **06** | **Bicep (IaC)** | Kommande |
 | **07** | **Containrar** | Kommande |
@@ -37,8 +37,10 @@ devops-repo/
 ├── docs/                           # Kursdokumentation och modulrapporter
 ├── scripts/
 │   ├── build.sh                    # Bygg- och strukturkontroll (körs lokalt & i CI)
-│   ├── test.sh                     # Funktionella och strukturella tester
-│   └── check-commit-messages.sh    # Validerar Conventional Commits
+│   ├── check-commit-messages.sh    # Validerar Conventional Commits
+│   ├── health-check.sh             # Hälskontroll av rullad applikation (pollning)
+│   └── test.sh                     # Funktionella och strukturella tester
+├── src/                            # Waypoint webbapplikation (Node.js 24)
 └── README.md
 ```
 
@@ -57,4 +59,7 @@ Innan du pushar eller öppnar en Pull Request kan du köra testerna lokalt i ter
 
 # Validera dina senaste commit-meddelanden
 ./scripts/check-commit-messages.sh
+
+# Testa applikationens drifthälsa (lokalt eller mot Azure)
+./scripts/health-check.sh "http://localhost:3000/health"
 ```
