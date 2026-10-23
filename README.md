@@ -41,6 +41,7 @@ devops-repo/
 │   ├── check-commit-messages.sh            # Validerar Conventional Commits
 │   ├── deploy-app-service.sh               # Paketerar och driftsätter via Azure CLI
 │   ├── health-check.sh                     # Hälskontroll av rullad applikation (pollning)
+│   ├── provision-app-service.sh            # Etablerar plan, webbapp och identitet i Azure
 │   └── test.sh                             # Funktionella och strukturella tester
 ├── src/                                    # Waypoint webbapplikation (Node.js 24)
 └── README.md

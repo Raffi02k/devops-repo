@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Kontrollera att miljövariabler skickats med, annars avbryt
-RESOURCE_GROUP="${1:?Give resource group name}"
-APP_NAME="${2:?Give Web App name}"
+# Git Bash on Windows rewrites /subscriptions/... into a Windows path, and Az
+# This keeps the resource ids as they are. Elsewhere it does nothing.
+export MSYS_NO_PATHCONV=1
+
+NAME="${1:?Give your name as the first argument}"
+RESOURCE_GROUP="${2:?Give your resource group as the second argument}"
+APP_NAME="app-waypoint-$NAME"
+
+# Om namnet redan är fullständigt (t.ex. app-waypoint-raffi)
+if [[ "$NAME" == app-* ]]; then
+  APP_NAME="$NAME"
+fi
 
 echo "==> Preparing build artifact (deployment.zip)"
 mkdir -p artifacts
