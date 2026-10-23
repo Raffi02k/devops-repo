@@ -60,3 +60,22 @@ CLIENT_ID=$(az identity show \
   --resource-group "$RESOURCE_GROUP" \
   --query clientId \
   --output tsv)
+
+PRINCIPAL_ID=$(az identity show \
+  --name "$IDENTITY_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query principalId \
+  --output tsv)
+
+echo "==> 4. Trust GitHub: a run on main in this repo may log in as the identity"
+SUBJECT_PREFIX=$(gh api "repos/{owner}/{repo}/actions/oidc/customization/sub" --jq .sub_claim_prefix)
+
+az identity federated-credential create \
+  --name github-main-branch \
+  --identity-name "$IDENTITY_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --issuer https://token.actions.githubusercontent.com \
+  --subject "${SUBJECT_PREFIX}:ref:refs/heads/main" \
+  --audiences api://AzureADTokenExchange \
+  --query subject \
+  --output tsv
