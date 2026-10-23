@@ -43,3 +43,4 @@ jobs:
 
       - name: Run Health Check (Smoke Test)
         run: ./scripts/health-check.sh "https://app-waypoint-raffi.azurewebsites.net/health"
+        
