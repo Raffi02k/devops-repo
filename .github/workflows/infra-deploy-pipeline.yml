@@ -21,10 +21,15 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Install dependencies and build
+      - name: Install dependencies
         run: |
           cd src
           npm install
+
+      - name: Zip deployment package
+        run: |
+          cd src
+          zip -r ../deployment.zip .
 
       - name: Azure Login
         uses: azure/login@v2
@@ -51,4 +56,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ vars.AZURE_APP_NAME }}
-          package: 'src'
+          package: 'deployment.zip'
