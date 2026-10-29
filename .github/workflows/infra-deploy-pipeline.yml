@@ -39,4 +39,4 @@ jobs:
 
       - name: Deploy Web App Source Code
         run: |
-          ./scripts/deploy-app-service.sh "${{ vars.AZURE_APP_NAME }}" "${{ vars.AZURE_RESOURCE_GROUP }}" --track-status false --output none
+          ./scripts/deploy-app-service.sh "${{ vars.AZURE_APP_NAME }}" "${{ vars.AZURE_RESOURCE_GROUP }}"
