@@ -3,6 +3,9 @@ param appName string
 param appServicePlanId string
 param linuxFxVersion string
 
+@secure()
+param connectionString string = ''
+
 resource appService 'Microsoft.Web/sites@2025-03-01' = {
   name: appName
   location: location
@@ -11,13 +14,18 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
-      appCommandLine: 'node src/server.js'
-      appSettings: [
+      appCommandLine: 'npm start'
+      appSettings: union([
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
-      ]
+      ], empty(connectionString) ? [] : [
+        {
+          name: 'SQL_CONNECTION_STRING'
+          value: connectionString
+        }
+      ])
     }
   }
 }
