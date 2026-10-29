@@ -16,7 +16,7 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'false'
-        },
+        }
         {
           name: 'PORT'
           value: '8080'
