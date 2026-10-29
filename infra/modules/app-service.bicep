@@ -11,15 +11,10 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
-      appCommandLine: 'npm start'
       appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-          value: 'false'
-        }
-        {
-          name: 'PORT'
-          value: '8080'
+          value: 'true'
         }
       ]
     }

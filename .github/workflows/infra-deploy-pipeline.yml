@@ -16,21 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
-      - name: Install dependencies
-        run: |
-          cd src
-          npm install
-
-      - name: Zip deployment package
-        run: |
-          cd src
-          zip -r ../deployment.zip .
-
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -53,7 +38,5 @@ jobs:
             --parameters infra/dev.bicepparam
 
       - name: Deploy Web App Source Code
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ vars.AZURE_APP_NAME }}
-          package: 'deployment.zip'
+        run: |
+          ./scripts/deploy-app-service.sh "${{ vars.AZURE_APP_NAME }}" "${{ vars.AZURE_RESOURCE_GROUP }}" --track-status false --output none
