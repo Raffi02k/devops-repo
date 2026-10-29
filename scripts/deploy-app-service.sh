@@ -6,7 +6,7 @@ echo "==> Preparing build artifact (deployment.zip)"
 mkdir -p artifacts
 rm -f artifacts/deployment.zip
 
-# Packa package.json, package-lock.json och src-mappen från roten
+# Packa filerna korrekt
 zip -r artifacts/deployment.zip package.json package-lock.json src/
 
 echo "==> Deploying artifact to Azure App Service: $APP_NAME"
@@ -14,4 +14,6 @@ az webapp deploy \
   --resource-group "$RESOURCE_GROUP" \
   --name "$APP_NAME" \
   --src-path "artifacts/deployment.zip" \
-  --type "zip"
+  --type "zip" \
+  --track-status false \
+  --output none

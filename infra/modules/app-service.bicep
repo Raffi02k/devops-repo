@@ -11,6 +11,7 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
+      appCommandLine: 'node src/server.js'
       appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
