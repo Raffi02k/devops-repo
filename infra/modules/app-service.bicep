@@ -14,7 +14,7 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
       appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-          value: 'true'
+          value: 'false'
         }
       ]
     }
