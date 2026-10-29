@@ -9,8 +9,8 @@ param sqlServerName string
 param sqlDatabaseName string
 param sqlAdminLogin string
 
-@secure()
-param sqlAdminPassword string
+// Vi ändrar till en variabel (var) så slipper vi skicka med den från parametrar!
+var sqlAdminPassword = 'P@ssword${uniqueString(resourceGroup().id)}!'
 
 module appServicePlan 'modules/app-service-plan.bicep' = {
   name: 'app-service-plan'
@@ -43,4 +43,4 @@ module appService 'modules/app-service.bicep' = {
   }
 }
 
-output appServiceUrl string = appService.outputs.appServiceUrl
+output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
