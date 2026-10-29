@@ -42,4 +42,4 @@ module appService 'modules/app-service.bicep' = {
   }
 }
 
-output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
+output appServiceUrl string = appService.outputs.appServiceUrl
