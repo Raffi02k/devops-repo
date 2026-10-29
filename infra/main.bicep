@@ -9,7 +9,6 @@ param sqlServerName string
 param sqlDatabaseName string
 param sqlAdminLogin string
 
-// Vi ändrar till en variabel (var) så slipper vi skicka med den från parametrar!
 var sqlAdminPassword = 'P@ssword${uniqueString(resourceGroup().id)}!'
 
 module appServicePlan 'modules/app-service-plan.bicep' = {
