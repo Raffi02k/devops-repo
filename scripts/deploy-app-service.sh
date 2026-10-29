@@ -5,7 +5,9 @@ RESOURCE_GROUP=$2
 echo "==> Preparing build artifact (deployment.zip)"
 mkdir -p artifacts
 rm -f artifacts/deployment.zip
-cd src && zip -r ../artifacts/deployment.zip . && cd ..
+
+# Packa package.json, package-lock.json och src-mappen från roten
+zip -r artifacts/deployment.zip package.json package-lock.json src/
 
 echo "==> Deploying artifact to Azure App Service: $APP_NAME"
 az webapp deploy \
