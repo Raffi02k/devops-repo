@@ -12,6 +12,4 @@ az webapp deploy \
   --resource-group "$RESOURCE_GROUP" \
   --name "$APP_NAME" \
   --src-path "artifacts/deployment.zip" \
-  --type "zip" \
-  --track-status false \
-  --output none
+  --type "zip"
