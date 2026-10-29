@@ -38,5 +38,7 @@ jobs:
             --parameters infra/dev.bicepparam
 
       - name: Deploy Web App Source Code
-        run: |
-          ./scripts/deploy-app-service.sh "${{ vars.AZURE_APP_NAME }}" "${{ vars.AZURE_RESOURCE_GROUP }}"
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_APP_NAME }}
+          package: '.'
