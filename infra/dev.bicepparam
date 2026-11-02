@@ -6,6 +6,7 @@ param planName = 'asp-waypoint-${name}'
 param planSku = 'B1'
 param appName = 'app-waypoint-${name}'
 param linuxFxVersion = 'NODE|24-lts'
+param registryName = 'crwaypoint${name}'
 
 // Databaskonfiguration (helt statiska värden)
 param sqlServerName = 'sql-waypoint-${name}'

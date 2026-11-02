@@ -4,12 +4,23 @@ param planSku string = 'B1'
 param appName string
 param linuxFxVersion string
 
+// Container Registry-parametrar
+param registryName string
+
 // SQL-parametrar
 param sqlServerName string
 param sqlDatabaseName string
 param sqlAdminLogin string
 
 var sqlAdminPassword = 'P@ssword${uniqueString(resourceGroup().id)}!'
+
+module containerRegistry 'modules/container-registry.bicep' = {
+  name: 'container-registry'
+  params: {
+    location: location
+    registryName: registryName
+  }
+}
 
 module appServicePlan 'modules/app-service-plan.bicep' = {
   name: 'app-service-plan'
@@ -43,3 +54,4 @@ module appService 'modules/app-service.bicep' = {
 }
 
 output appServiceUrl string = appService.outputs.appServiceUrl
+output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
