@@ -16,7 +16,7 @@ Projektet byggs upp steg för steg vecka för vecka genom praktiska moduler – 
 | **04** | **Azure App Service** | Klar – Driftsättning via Azure CLI, resursgrupper, App Service Plan, hälskontroll och kostnadskontroll ([docs/04-Azure.md](file:///Users/raffimedz/Desktop/devops/devops-repo/docs/04-Azure.md)) |
 | **05** | **CI/CD till Azure** | Klar – Automatiserad CD-pipeline med GitHub Actions, OIDC-autentisering, zip-deploy och smoke test ([docs/05-cicd-azure.md](docs/05-cicd-azure.md)) |
 | **06** | **Bicep (IaC)** | Klar – Deklarativ infrastruktur med Bicep-moduler, Azure SQL Database, parameterfiler (.bicepparam) samt automatiserad pipeline med What-If och OIDC ([docs/06-bicep-iac.md](docs/06-bicep-iac.md)) |
-| **07** | **Containrar** | Kommande |
+| **07** | **Containrar** | Klar – Dockerfile, multi-arch byggen (`linux/amd64`), Azure Container Registry (ACR), RBAC (`AcrPush`) och Azure Budgets ([docs/07-containrar.md](docs/07-containrar.md)) |
 | **08** | **Observerbarhet** | Kommande |
 | **09** | **Container Apps** | Kommande |
 | **10** | **Säkerhet** | Kommande |
@@ -29,6 +29,7 @@ Projektet byggs upp steg för steg vecka för vecka genom praktiska moduler – 
 
 ```text
 devops-repo/
+├── .dockerignore                           # Exkluderar filer och kataloger från Docker-byggkontext
 ├── .github/
 │   ├── workflows/
 │   │   ├── build-test-pipeline.yml         # CI-pipeline som körs vid push/PR mot main
@@ -36,14 +37,18 @@ devops-repo/
 │   │   └── infra-deploy-pipeline.yml       # IaC-pipeline med Bicep, What-If och app-deploy
 │   ├── CODEOWNERS                          # Automatisk tilldelning av granskare
 │   └── pull_request_template.md            # Mall för Pull Requests med kvalitetsfrågor
+├── Dockerfile                              # Optimerad containerdefinition (Node.js 24-slim, icke-root)
 ├── docs/                                   # Kursdokumentation och modulrapporter
 ├── infra/                                  # Infrastruktur som kod (IaC) i Bicep
+│   ├── budget.bicep                        # Azure Budgets kostnadsbevakning och tidiga larm
 │   ├── dev.bicepparam                      # Parameterfil för utvecklingsmiljön
 │   ├── identity.bicep                      # Hanterad identitet och OIDC-federering
 │   ├── main.bicep                          # Huvudmall som orkestrerar modulerna
 │   └── modules/
 │       ├── app-service.bicep               # App Service (Linux, Node.js 24) & app settings
 │       ├── app-service-plan.bicep          # App Service Plan (Linux B1)
+│       ├── container-registry.bicep        # Azure Container Registry (ACR Basic)
+│       ├── contributor-role.bicep          # Modulär RBAC-rolltilldelning för Contributor
 │       └── sql-database.bicep              # Azure SQL Server, databas och brandvägg
 ├── scripts/
 │   ├── build.sh                            # Bygg- och strukturkontroll (körs lokalt & i CI)
