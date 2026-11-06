@@ -64,7 +64,7 @@ devops-repo/
 
 ---
 
-## 🚀 Köra skripten lokalt
+## 🚀 Köra skripten lokalt & CI-tester
 
 Innan du pushar eller öppnar en Pull Request kan du köra testerna lokalt i terminalen:
 
@@ -72,12 +72,95 @@ Innan du pushar eller öppnar en Pull Request kan du köra testerna lokalt i ter
 # Kör byggkontrollen
 ./scripts/build.sh
 
-# Kör testsviten
+# Kör testsviten (enhetstester)
 ./scripts/test.sh
 
-# Validera dina senaste commit-meddelanden
+# Validera dina senaste commit-meddelanden (Conventional Commits)
 ./scripts/check-commit-messages.sh
-
-# Testa applikationens drifthälsa (lokalt eller mot Azure)
-./scripts/health-check.sh "http://localhost:3000/health"
 ```
+
+---
+
+## 🔍 Kontrollera status och drifthälsa ("Kika")
+
+Använd dessa skript och kommandon för att kontrollera att dina servrar, containrar och Azure-resurser mår bra:
+
+### 1. Testa drifthälsa (Smoke Test)
+```bash
+# Testa lokal Node.js-app (port 3000)
+./scripts/health-check.sh "http://localhost:3000/health"
+
+# Testa lokal Docker-container (port 8080) och verifiera commit-ID
+./scripts/health-check.sh "http://localhost:8080/health" "$(git rev-parse HEAD)"
+
+# Testa skarp applikation i Azure
+./scripts/health-check.sh "https://app-waypoint-raffi.azurewebsites.net/health"
+```
+
+### 2. Kika på status för dina appar i Azure
+```bash
+# Lista webbappar och se om de är "Running" eller "Stopped"
+az webapp list \
+  --resource-group RaffiMedzadaghlian \
+  --query "[].{Namn:name, Status:state, URL:defaultHostName}" \
+  --output table
+
+# Se alla aktiva resurser i resursgruppen (planer, databaser, identiteter)
+az resource list \
+  --resource-group RaffiMedzadaghlian \
+  --query "[].{Namn:name, Typ:type}" \
+  --output table
+
+# Se vilka Docker-taggar som finns uppladdade i Azure Container Registry (ACR)
+az acr repository show-tags \
+  --name crwaypointraffi \
+  --repository waypoint \
+  --output table
+```
+
+---
+
+## 🛑 Kostnadskontroll & Stänga ner (Teardown)
+
+En viktig princip inom DevOps och molndrift är att **inte låta resurser stå och ticka pengar** när de inte används (särskilt App Service Plan på B1-nivå och Container Registry).
+
+### Snabb nedstängning med skriptet:
+```bash
+# Raderar App Service och App Service Plan – stoppar timdebiteringen direkt!
+./scripts/teardown-app-service.sh
+
+# Vill du även ta bort Azure SQL-servern kan du lägga till --all:
+./scripts/teardown-app-service.sh --all
+```
+
+*(Identiteten `id-waypoint-pipeline-raffi` och den kostnadsfria SQL-databasen lämnas kvar så att GitHub Actions kan bygga upp miljön igen automatiskt nästa gång du pushar).*
+
+### Ta bort Container Registry efter avslutad övning:
+```bash
+az acr delete --name crwaypointraffi --resource-group RaffiMedzadaghlian --yes
+```
+
+---
+
+## 🐳 Docker: Bygga & köra containern lokalt
+
+Snabbreferens för att testa containerbygget lokalt:
+
+```bash
+# 1. Bygg imagen och baka in commit-ID
+TAG=$(git rev-parse --short HEAD)
+docker build \
+  --build-arg COMMIT=$(git rev-parse HEAD) \
+  -t waypoint:$TAG \
+  .
+
+# 2. Starta containern isolerat i bakgrunden på port 8080
+docker run -d --rm --name waypoint -p 8080:8080 waypoint:$TAG
+
+# 3. Kolla realtidsloggar från appen
+docker logs waypoint
+
+# 4. Stoppa containern
+docker stop waypoint
+```
+
