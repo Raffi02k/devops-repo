@@ -17,7 +17,7 @@ Projektet byggs upp steg för steg vecka för vecka genom praktiska moduler – 
 | **05** | **CI/CD till Azure** | Klar – Automatiserad CD-pipeline med GitHub Actions, OIDC-autentisering, zip-deploy och smoke test ([docs/05-cicd-azure.md](docs/05-cicd-azure.md)) |
 | **06** | **Bicep (IaC)** | Klar – Deklarativ infrastruktur med Bicep-moduler, Azure SQL Database, parameterfiler (.bicepparam) samt automatiserad pipeline med What-If och OIDC ([docs/06-bicep-iac.md](docs/06-bicep-iac.md)) |
 | **07** | **Containrar** | Klar – Dockerfile, multi-arch byggen (`linux/amd64`), Azure Container Registry (ACR), RBAC (`AcrPush`) och Azure Budgets ([docs/07-containrar.md](docs/07-containrar.md)) |
-| **08** | **Observerbarhet** | Kommande |
+| **08** | **Observerbarhet** | Klar – Log Analytics Workspace, KQL-frågor, diagnostikinställningar, Action Groups och automatiserade larm (`alerts.bicep`) ([docs/08-observerbarhet.md](docs/08-observerbarhet.md)) |
 | **09** | **Container Apps** | Kommande |
 | **10** | **Säkerhet** | Kommande |
 | **11** | **Incidenthantering** | Kommande |
@@ -45,10 +45,12 @@ devops-repo/
 │   ├── identity.bicep                      # Hanterad identitet och OIDC-federering
 │   ├── main.bicep                          # Huvudmall som orkestrerar modulerna
 │   └── modules/
-│       ├── app-service.bicep               # App Service (Linux, Node.js 24) & app settings
+│       ├── alerts.bicep                    # Larmregel (high-error-rate) och Action Group (e-post)
+│       ├── app-service.bicep               # App Service (Linux, Node.js 24) & diagnostikinställning
 │       ├── app-service-plan.bicep          # App Service Plan (Linux B1)
 │       ├── container-registry.bicep        # Azure Container Registry (ACR Basic)
 │       ├── contributor-role.bicep          # Modulär RBAC-rolltilldelning för Contributor
+│       ├── log-analytics.bicep             # Log Analytics Workspace för central logglagring
 │       └── sql-database.bicep              # Azure SQL Server, databas och brandvägg
 ├── scripts/
 │   ├── build.sh                            # Bygg- och strukturkontroll (körs lokalt & i CI)
@@ -126,19 +128,14 @@ En viktig princip inom DevOps och molndrift är att **inte låta resurser stå o
 
 ### Snabb nedstängning med skriptet:
 ```bash
-# Raderar App Service och App Service Plan – stoppar timdebiteringen direkt!
+# 1. Standard (Snabb): Raderar App Service och App Service Plan – stoppar timdebiteringen direkt!
 ./scripts/teardown-app-service.sh
 
-# Vill du även ta bort Azure SQL-servern kan du lägga till --all:
+# 2. Full städning: Raderar även larmregel, Action Group, Log Analytics Workspace, ACR och SQL-server:
 ./scripts/teardown-app-service.sh --all
 ```
 
-*(Identiteten `id-waypoint-pipeline-raffi` och den kostnadsfria SQL-databasen lämnas kvar så att GitHub Actions kan bygga upp miljön igen automatiskt nästa gång du pushar).*
-
-### Ta bort Container Registry efter avslutad övning:
-```bash
-az acr delete --name crwaypointraffi --resource-group RaffiMedzadaghlian --yes
-```
+*(Identiteten `id-waypoint-pipeline-raffi` och din budgetbevakning lämnas alltid kvar med 0 kr i kostnad så att GitHub Actions kan bygga upp miljön igen automatiskt nästa gång du pushar).*
 
 ---
 

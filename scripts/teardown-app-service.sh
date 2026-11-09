@@ -11,12 +11,12 @@ DEFAULT_RG="RaffiMedzadaghlian"
 
 NAME="$DEFAULT_NAME"
 RESOURCE_GROUP="$DEFAULT_RG"
-DELETE_SQL=false
+DELETE_ALL=false
 
 # Flagghantering
 for arg in "$@"; do
-  if [[ "$arg" == "--all" || "$arg" == "--with-sql" ]]; then
-    DELETE_SQL=true
+  if [[ "$arg" == "--all" || "$arg" == "--with-sql" || "$arg" == "--full" ]]; then
+    DELETE_ALL=true
   fi
 done
 
@@ -39,6 +39,10 @@ fi
 
 APP_NAME="app-waypoint-$NAME"
 PLAN_NAME="asp-waypoint-$NAME"
+REGISTRY_NAME="crwaypoint$NAME"
+WORKSPACE_NAME="log-waypoint-$NAME"
+ACTION_GROUP_NAME="ag-waypoint-$NAME"
+ALERT_NAME="high-error-rate"
 SQL_SERVER="sql-waypoint-$NAME"
 
 echo "=========================================================="
@@ -56,8 +60,32 @@ az appservice plan delete \
   --resource-group "$RESOURCE_GROUP" \
   --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $PLAN_NAME (kanske redan borttagen)."
 
-if [ "$DELETE_SQL" = true ]; then
-  echo "==> 3. Tar bort SQL Server ($SQL_SERVER)..."
+if [ "$DELETE_ALL" = true ]; then
+  echo "==> 3. Tar bort larmregel ($ALERT_NAME)..."
+  az monitor scheduled-query delete \
+    --name "$ALERT_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $ALERT_NAME (kanske redan borttagen)."
+
+  echo "==> 4. Tar bort action group ($ACTION_GROUP_NAME)..."
+  az monitor action-group delete \
+    --name "$ACTION_GROUP_NAME" \
+    --resource-group "$RESOURCE_GROUP" 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $ACTION_GROUP_NAME (kanske redan borttagen)."
+
+  echo "==> 5. Tar bort Log Analytics workspace ($WORKSPACE_NAME)..."
+  az monitor log-analytics workspace delete \
+    --workspace-name "$WORKSPACE_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --force \
+    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $WORKSPACE_NAME (kanske redan borttagen)."
+
+  echo "==> 6. Tar bort Container Registry ($REGISTRY_NAME)..."
+  az acr delete \
+    --name "$REGISTRY_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $REGISTRY_NAME (kanske redan borttagen)."
+
+  echo "==> 7. Tar bort SQL Server ($SQL_SERVER)..."
   az sql server delete \
     --name "$SQL_SERVER" \
     --resource-group "$RESOURCE_GROUP" \
@@ -73,7 +101,8 @@ az resource list \
 
 echo ""
 echo "✅ Klart! App Service Planen är borttagen och kostnaden är stoppad."
-if [ "$DELETE_SQL" = false ]; then
-  echo "💡 Tips: Din SQL-databas och Managed Identity lämnades kvar (de kostar 0 kr)."
-  echo "   Om du även vill ta bort SQL-servern kan du köra: ./scripts/teardown-app-service.sh --all"
+if [ "$DELETE_ALL" = false ]; then
+  echo "💡 Tips: Log Analytics, larm, ACR och Managed Identity lämnades kvar för laboration."
+  echo "   Om du vill städa bort ALLT (larm, workspace, ACR, SQL) kör du:"
+  echo "   ./scripts/teardown-app-service.sh --all"
 fi
