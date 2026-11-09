@@ -1,26 +1,29 @@
+@description('Region. The same as the resource group, unless you give another.')
 param location string = resourceGroup().location
+
+@description('Name of the App Service plan.')
 param planName string
+
+@description('Plan tier: B1, or P0v3 for the faster alternative.')
 param planSku string = 'B1'
+
+@description('Name of the web app. Part of its address, so it must be unique in all of Azure.')
 param appName string
+
+@description('Language and version, for example NODE|24-lts.')
 param linuxFxVersion string
 
-// Container Registry-parametrar
+@description('Name of the container registry. Letters and digits only, unique in all of Azure.')
 param registryName string
 
-// SQL-parametrar
-param sqlServerName string
-param sqlDatabaseName string
-param sqlAdminLogin string
+@description('Name of the Log Analytics workspace.')
+param workspaceName string
 
-var sqlAdminPassword = 'P@ssword${uniqueString(resourceGroup().id)}!'
+@description('Name of the action group that gets the alerts.')
+param actionGroupName string
 
-module containerRegistry 'modules/container-registry.bicep' = {
-  name: 'container-registry'
-  params: {
-    location: location
-    registryName: registryName
-  }
-}
+@description('Where alerts are sent.')
+param alertEmail string
 
 module appServicePlan 'modules/app-service-plan.bicep' = {
   name: 'app-service-plan'
@@ -31,14 +34,19 @@ module appServicePlan 'modules/app-service-plan.bicep' = {
   }
 }
 
-module sqlDatabase 'modules/sql-database.bicep' = {
-  name: 'sql-database'
+module containerRegistry 'modules/container-registry.bicep' = {
+  name: 'container-registry'
   params: {
     location: location
-    serverName: sqlServerName
-    databaseName: sqlDatabaseName
-    administratorLogin: sqlAdminLogin
-    administratorLoginPassword: sqlAdminPassword
+    registryName: registryName
+  }
+}
+
+module logAnalytics 'modules/log-analytics.bicep' = {
+  name: 'log-analytics'
+  params: {
+    location: location
+    workspaceName: workspaceName
   }
 }
 
@@ -49,9 +57,19 @@ module appService 'modules/app-service.bicep' = {
     appName: appName
     appServicePlanId: appServicePlan.outputs.appServicePlanId
     linuxFxVersion: linuxFxVersion
-    connectionString: 'Server=tcp:${sqlDatabase.outputs.sqlServerFullyQualifiedDomainName},1433;Database=${sqlDatabaseName};User Id=${sqlAdminLogin};Password=${sqlAdminPassword};Encrypt=true'
+    workspaceId: logAnalytics.outputs.workspaceId
+  }
+}
+
+module alerts 'modules/alerts.bicep' = {
+  name: 'alerts'
+  params: {
+    location: location
+    workspaceId: logAnalytics.outputs.workspaceId
+    actionGroupName: actionGroupName
+    alertEmail: alertEmail
   }
 }
 
 output appServiceUrl string = appService.outputs.appServiceUrl
-output containerRegistryLoginServer string = containerRegistry.outputs.loginServer
+output registryLoginServer string = containerRegistry.outputs.loginServer

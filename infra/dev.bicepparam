@@ -7,8 +7,6 @@ param planSku = 'B1'
 param appName = 'app-waypoint-${name}'
 param linuxFxVersion = 'NODE|24-lts'
 param registryName = 'crwaypoint${name}'
-
-// Databaskonfiguration (helt statiska värden)
-param sqlServerName = 'sql-waypoint-${name}'
-param sqlDatabaseName = 'sqldb-waypoint-${name}'
-param sqlAdminLogin = 'waypointadmin'
+param workspaceName = 'log-waypoint-${name}'
+param actionGroupName = 'ag-waypoint-${name}'
+param alertEmail = readEnvironmentVariable('ALERT_EMAIL')

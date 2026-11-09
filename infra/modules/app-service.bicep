@@ -3,8 +3,8 @@ param appName string
 param appServicePlanId string
 param linuxFxVersion string
 
-@secure()
-param connectionString string = ''
+@description('Id of the Log Analytics workspace that gets the logs.')
+param workspaceId string
 
 resource appService 'Microsoft.Web/sites@2025-03-01' = {
   name: appName
@@ -14,19 +14,32 @@ resource appService 'Microsoft.Web/sites@2025-03-01' = {
     httpsOnly: true
     siteConfig: {
       linuxFxVersion: linuxFxVersion
-      appCommandLine: 'npm start'
-      appSettings: union([
+      appSettings: [
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
           value: 'true'
         }
-      ], empty(connectionString) ? [] : [
-        {
-          name: 'SQL_CONNECTION_STRING'
-          value: connectionString
-        }
-      ])
+      ]
     }
+  }
+}
+
+// Sends the app's logs to the workspace. Without it, nothing ends up there.
+resource appServiceDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'to-workspace'
+  scope: appService
+  properties: {
+    workspaceId: workspaceId
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        enabled: true
+      }
+    ]
   }
 }
 
