@@ -52,44 +52,44 @@ echo "=========================================================="
 echo "==> 1. Tar bort App Service ($APP_NAME)..."
 az webapp delete \
   --name "$APP_NAME" \
-  --resource-group "$RESOURCE_GROUP" 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $APP_NAME (kanske redan borttagen)."
+  --resource-group "$RESOURCE_GROUP" || true
 
 echo "==> 2. Tar bort App Service Plan ($PLAN_NAME) [Stoppar debitering]..."
 az appservice plan delete \
   --name "$PLAN_NAME" \
   --resource-group "$RESOURCE_GROUP" \
-  --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $PLAN_NAME (kanske redan borttagen)."
+  --yes || true
 
 if [ "$DELETE_ALL" = true ]; then
   echo "==> 3. Tar bort larmregel ($ALERT_NAME)..."
   az monitor scheduled-query delete \
     --name "$ALERT_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $ALERT_NAME (kanske redan borttagen)."
+    --yes || true
 
   echo "==> 4. Tar bort action group ($ACTION_GROUP_NAME)..."
   az monitor action-group delete \
     --name "$ACTION_GROUP_NAME" \
-    --resource-group "$RESOURCE_GROUP" 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $ACTION_GROUP_NAME (kanske redan borttagen)."
+    --resource-group "$RESOURCE_GROUP" || true
 
   echo "==> 5. Tar bort Log Analytics workspace ($WORKSPACE_NAME)..."
   az monitor log-analytics workspace delete \
     --workspace-name "$WORKSPACE_NAME" \
     --resource-group "$RESOURCE_GROUP" \
     --force \
-    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $WORKSPACE_NAME (kanske redan borttagen)."
+    --yes || true
 
   echo "==> 6. Tar bort Container Registry ($REGISTRY_NAME)..."
   az acr delete \
     --name "$REGISTRY_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $REGISTRY_NAME (kanske redan borttagen)."
+    --yes || true
 
   echo "==> 7. Tar bort SQL Server ($SQL_SERVER)..."
   az sql server delete \
     --name "$SQL_SERVER" \
     --resource-group "$RESOURCE_GROUP" \
-    --yes 2>/dev/null || echo "   ℹ️ Kunde inte ta bort $SQL_SERVER (kanske redan borttagen)."
+    --yes || true
 fi
 
 echo ""
