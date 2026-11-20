@@ -13,15 +13,6 @@ param pullIdentityName string
 @description('Image tag to deploy.')
 param imageTag string
 
-@description('Name of the Log Analytics workspace.')
-param workspaceName string
-
-@description('Name of the action group that gets the alerts.')
-param actionGroupName string
-
-@description('Where alerts are sent.')
-param alertEmail string
-
 module containerRegistry 'modules/container-registry.bicep' = {
   name: 'container-registry'
   params: {
@@ -46,24 +37,6 @@ module containerApp 'modules/container-app.bicep' = {
     pullIdentityId: pullIdentity.outputs.pullIdentityId
     acrLoginServer: containerRegistry.outputs.loginServer
     imageTag: imageTag
-  }
-}
-
-module logAnalytics 'modules/log-analytics.bicep' = {
-  name: 'log-analytics'
-  params: {
-    location: location
-    workspaceName: workspaceName
-  }
-}
-
-module alerts 'modules/alerts.bicep' = {
-  name: 'alerts'
-  params: {
-    location: location
-    workspaceId: logAnalytics.outputs.workspaceId
-    actionGroupName: actionGroupName
-    alertEmail: alertEmail
   }
 }
 
