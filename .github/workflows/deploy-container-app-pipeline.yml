@@ -1,0 +1,68 @@
+name: Deploy Container App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and Push Container Image
+        run: |
+          TAG=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "Building image with tag: $TAG"
+          az acr build \
+            --registry crwaypointraffi \
+            --image waypoint:$TAG \
+            --image waypoint:latest \
+            .
+
+      - name: Deploy Container App via Bicep
+        run: |
+          TAG=$(echo ${{ github.sha }} | cut -c1-7)
+          export IMAGE_TAG="$TAG"
+          az deployment group create \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --template-file infra/main-container-apps.bicep \
+            --parameters infra/container-apps.bicepparam
+
+      - name: Smoke Test Container App
+        run: |
+          APP_URL=$(az containerapp show \
+            --name "ca-waypoint-raffi" \
+            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          
+          echo "Testing: https://$APP_URL/health"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$APP_URL/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ App is healthy and responding with 200 OK!"
+              curl -s "https://$APP_URL/health"
+              echo ""
+              exit 0
+            fi
+            echo "Waiting for app to become ready... (attempt $i/10, status: $STATUS)"
+            sleep 3
+          done
+          echo "❌ App failed health check"
+          exit 1
+

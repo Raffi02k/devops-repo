@@ -18,7 +18,7 @@ Projektet byggs upp steg för steg vecka för vecka genom praktiska moduler – 
 | **06** | **Bicep (IaC)** | Klar – Deklarativ infrastruktur med Bicep-moduler, Azure SQL Database, parameterfiler (.bicepparam) samt automatiserad pipeline med What-If och OIDC ([docs/06-bicep-iac.md](docs/06-bicep-iac.md)) |
 | **07** | **Containrar** | Klar – Dockerfile, multi-arch byggen (`linux/amd64`), Azure Container Registry (ACR), RBAC (`AcrPush`) och Azure Budgets ([docs/07-containrar.md](docs/07-containrar.md)) |
 | **08** | **Observerbarhet** | Klar – Log Analytics Workspace, KQL-frågor, diagnostikinställningar, Action Groups och automatiserade larm (`alerts.bicep`) ([docs/08-observerbarhet.md](docs/08-observerbarhet.md)) |
-| **09** | **Container Apps** | Kommande |
+| **09** | **Container Apps** | Pågående / Klar – Azure Container Apps (ACA), Least Privilege med Managed Identity (`AcrPull`), Bicep-mallar (`container-app.bicep`), serverlös skalning (`0-3`), och CI/CD-pipeline ([docs/09-container-apps.md](docs/09-container-apps.md)) |
 | **10** | **Säkerhet** | Kommande |
 | **11** | **Incidenthantering** | Kommande |
 | **12** | **Förbättring och redovisning** | Kommande |
@@ -33,21 +33,30 @@ devops-repo/
 ├── .github/
 │   ├── workflows/
 │   │   ├── build-test-pipeline.yml         # CI-pipeline som körs vid push/PR mot main
-│   │   ├── deploy-app-service-pipeline.yml # CD-pipeline med OIDC-driftsättning till Azure
-│   │   └── infra-deploy-pipeline.yml       # IaC-pipeline med Bicep, What-If och app-deploy
+│   │   ├── deploy-app-service-pipeline.yml # CD-pipeline med OIDC-driftsättning till Azure (Legacy)
+│   │   ├── deploy-container-app-pipeline.yml # CD-pipeline för Container Apps med OIDC och Bicep
+│   │   └── infra-deploy-pipeline.yml       # IaC-pipeline för App Service (ersatt i Modul 09)
 │   ├── CODEOWNERS                          # Automatisk tilldelning av granskare
 │   └── pull_request_template.md            # Mall för Pull Requests med kvalitetsfrågor
 ├── Dockerfile                              # Optimerad containerdefinition (Node.js 24-slim, icke-root)
 ├── docs/                                   # Kursdokumentation och modulrapporter
 ├── infra/                                  # Infrastruktur som kod (IaC) i Bicep
 │   ├── budget.bicep                        # Azure Budgets kostnadsbevakning och tidiga larm
-│   ├── dev.bicepparam                      # Parameterfil för utvecklingsmiljön
+│   ├── container-apps.bicepparam           # Parameterfil för Container Apps
+│   ├── dev.bicepparam                      # Parameterfil för App Service
 │   ├── identity.bicep                      # Hanterad identitet och OIDC-federering
-│   ├── main.bicep                          # Huvudmall som orkestrerar modulerna
+│   ├── main-container-apps.bicep           # Huvudmall för Container Apps
+│   ├── main.bicep                          # Huvudmall för App Service
 │   └── modules/
 │       ├── alerts.bicep                    # Larmregel (high-error-rate) och Action Group (e-post)
 │       ├── app-service.bicep               # App Service (Linux, Node.js 24) & diagnostikinställning
 │       ├── app-service-plan.bicep          # App Service Plan (Linux B1)
+│       ├── container-app.bicep             # Container Apps miljö och app (skala 0-3, multiple revisions)
+│       ├── container-registry.bicep        # Azure Container Registry (crwaypointraffi)
+│       ├── contributor-role.bicep          # Rollfördelning för pipeline-identitet
+│       ├── log-analytics.bicep             # Central Log Analytics Workspace
+│       ├── pull-identity.bicep             # Användartilldelad identitet för AcrPull
+│       └── sql-database.bicep              # Azure SQL Database och Server (brandvägg & AAD-auth)
 │       ├── container-registry.bicep        # Azure Container Registry (ACR Basic)
 │       ├── contributor-role.bicep          # Modulär RBAC-rolltilldelning för Contributor
 │       ├── log-analytics.bicep             # Log Analytics Workspace för central logglagring
