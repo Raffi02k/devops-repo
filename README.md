@@ -122,6 +122,16 @@ az acr repository show-tags \
 
 ---
 
+## 🚀 Starta upp allt igen (Startup)
+
+Om du har stängt ner dina resurser och vill starta upp allt (infrastruktur via Bicep, App Service, databas, hälskontroll och GitHub-integration) med ett enda skript:
+
+```bash
+./scripts/start-all.sh
+```
+
+---
+
 ## 🛑 Kostnadskontroll & Stänga ner (Teardown)
 
 En viktig princip inom DevOps och molndrift är att **inte låta resurser stå och ticka pengar** när de inte används (särskilt App Service Plan på B1-nivå och Container Registry).
