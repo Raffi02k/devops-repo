@@ -162,7 +162,7 @@ content-type: application/json; charset=utf-8
 }
 ```
 
-### 2. Revisioner i Azure
+### 2. Revisioner i Azure efter flera releaser
 ```bash
 az containerapp revision list --name ca-waypoint-raffi --resource-group RaffiMedzadaghlian --output table
 ```
@@ -170,7 +170,59 @@ az containerapp revision list --name ca-waypoint-raffi --resource-group RaffiMed
 ```text
 CreatedTime                Active    Replicas    TrafficWeight    HealthState    ProvisioningState    Name
 -------------------------  --------  ----------  ---------------  -------------  -------------------  --------------------------
-2026-11-20T13:26:01+00:00  True      1           100              Healthy        Provisioned          ca-waypoint-raffi--xm0cv5o
+2026-11-20T13:26:01+00:00  True      0           0                Healthy        Provisioned          ca-waypoint-raffi--xm0cv5o
+2026-11-20T13:49:43+00:00  True      1           50               Healthy        Provisioned          ca-waypoint-raffi--0000001
+2026-11-20T13:58:22+00:00  True      1           50               Healthy        Provisioned          ca-waypoint-raffi--0000002
 ```
-Revisionen är aktiv och tar emot 100% av trafiken.
+* **Revision `ca-waypoint-raffi--0000001`**: Kör version **1.0.0**.
+* **Revision `ca-waypoint-raffi--0000002`**: Kör version **1.1.0**.
+
+---
+
+## 🚦 Trafikdelning (Canary Testing) & Blixtsnabb Rollback
+
+En av de största styrkorna med Azure Container Apps i `Multiple`-revisionsläge är möjligheten att lastbalansera mellan flera versioner och rulla tillbaka omedelbart.
+
+### 1. Trafikdelning 50/50 (Canary Release)
+Vi styr 50% av all inkommande trafik till version 1.0.0 och 50% till version 1.1.0:
+
+```bash
+az containerapp ingress traffic set \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --revision-weight "ca-waypoint-raffi--0000001=50" "ca-waypoint-raffi--0000002=50"
+```
+
+**Verifiering med curl-loop:**
+```bash
+for i in {1..10}; do
+  curl -s "https://$APP_URL/health" | grep "version"
+done
+```
+**Utdata i terminalen (lastbalanseraren växlar sömlöst mellan versionerna):**
+```text
+  "version": "1.1.0"
+  "version": "1.0.0"
+  "version": "1.0.0"
+  "version": "1.0.0"
+  "version": "1.1.0"
+  "version": "1.1.0"
+  "version": "1.1.0"
+  "version": "1.1.0"
+  "version": "1.0.0"
+  "version": "1.0.0"
+```
+
+### 2. Omedelbar Rollback på 2 sekunder
+Om version 1.1.0 uppvisar fel kan vi återställa 100% av trafiken till version 1.0.0 utan ombyggnad eller nertid:
+
+```bash
+az containerapp ingress traffic set \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --revision-weight "ca-waypoint-raffi--0000001=100" "ca-waypoint-raffi--0000002=0"
+```
+
+Efter detta kommando returnerar 100% av anropen version 1.0.0 direkt, medan version 1.1.0 skalar ner till 0 repliker i väntan på buggfix.
+
 

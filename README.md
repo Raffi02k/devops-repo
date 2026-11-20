@@ -127,6 +127,38 @@ az acr repository show-tags \
   --name crwaypointraffi \
   --repository waypoint \
   --output table
+
+# Se alla aktiva Container App-revisioner, repliker och trafikfördelning (Modul 09)
+az containerapp revision list \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --output table
+
+# Hämta URL (FQDN) för Azure Container App
+az containerapp show \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --query properties.configuration.ingress.fqdn \
+  --output tsv
+```
+
+### 3. Trafikdelning & Blixtsnabb Rollback (Container Apps)
+```bash
+# Dela trafiken 50/50 mellan två revisioner (Canary testing)
+az containerapp ingress traffic set \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --revision-weight "<GAMMAL_REVISION>=50" "<NY_REVISION>=50"
+
+# Testa trafikfördelning live i en loop (visar hur anropen växlar mellan versionerna)
+APP_URL=$(az containerapp show --name "ca-waypoint-raffi" --resource-group "RaffiMedzadaghlian" --query properties.configuration.ingress.fqdn -o tsv)
+for i in {1..10}; do curl -s "https://$APP_URL/health" | grep "version"; done
+
+# Omedelbar rollback på 2 sekunder (flytta 100% tillbaka till stabil revision)
+az containerapp ingress traffic set \
+  --name "ca-waypoint-raffi" \
+  --resource-group "RaffiMedzadaghlian" \
+  --revision-weight "<STABIL_REVISION>=100" "<FELAKTIG_REVISION>=0"
 ```
 
 ---
